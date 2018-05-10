@@ -23,21 +23,26 @@ module.exports = function(RED) {
 
             var sourceurl = msg.sourceurl || "http://localhost:1880/red";
             var user = msg.payload.user || undefined;
-            var pwd = msg.payload.pwd || undefined;
+            var pwd = msg.payload.password || undefined;
 
             var sourceapi = p.NodeRedApi(sourceurl);
             var targetapi = p.NodeRedApi(config.remote);
 
             d(`Deploying ${config.tab} on ${config.remote}; local user is ${user}`);
+            node.status({fill:"yellow", shape:"circle", text:"Deploying"});
 
             sourceapi
                 .authenticate(user, pwd)
                 .then(api => {
                     sourceapi = api;
                     var pusher = p.FlowPusher(sourceapi, config.tab, targetapi);
-                    pusher.pushflow();
+                    return pusher.pushflow();
+                }).then( state => {
+                    node.status({fill:"green", shape:"dot", text:"Deployed"});
                 }).catch(err => {
-                    console.log(err.stack || err);
+                    var message = err.message || "not deployed";
+                    node.status({fill:"red",shape:"ring",text:message});
+                    console.log(err);
                 });
         });
 

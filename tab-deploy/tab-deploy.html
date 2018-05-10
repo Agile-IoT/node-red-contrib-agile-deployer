@@ -21,7 +21,7 @@
         },
         inputs:1,
         outputs:0,
-        icon: "inject.png",
+        icon: "white-globe.png",
         label: function() {
             return this.name||"TabDeploy";
         },
@@ -47,26 +47,37 @@
 </script>
 
 <script type="text/x-red" data-help-name="tab-deploy">
-    <p>This is a node to ...3</p>
+    <p>
+        This node deploys a workflow tab on a source Node-RED instance
+        to a target Node-RED instance.
+    </p>
+    <p>
+        The tab must receive the input data by link in nodes. The link in nodes,
+        when transferred to the remote instance, are substituted with http in
+        nodes.
+    </p>
+    <p>
+        By default, the source instance is http://localhost:1880/red, which
+        can be overriden using the message payload.
+    </p>
 
     <h3>Parameters</h3>
     <dl>
-        <dt>...</dt>
-        <dd>...</dd>
+        <dt>Tab to export</dt>
+        <dd>Name of the tab to export</dd>
+        <dt>Target Node-RED address</dt>
+        <dd>Address of the target Node-RED instance where to push the flow</dd>
     </dl>
     <h3>Inputs</h3>
-    <p>The <code>msg.payload</code> is intended be a single sensor datum in AGILE schema.</p>
+    <p>The <code>msg.payload</code> can contain the following properties</p>
     <dl class="message-properties">
-        <dt>...</dt>
-        <dd>...</dd>
+        <dt>sourceurl</dt>
+        <dd>Address of source Node-RED instance</dd>
+        <dt>user</dt>
+        <dd>User to access the source Node-RED instance</dd>
+        <dt>password</dt>
+        <dd>Password to access the source Node-RED instance</dd>
     </dl>
 
-<!--
-    <h3>Config node</h3>
-    <dl>
-        <dt>...</dt>
-        <dd>..</dd>
-    </dl>
--->
 
 </script>

@@ -17,7 +17,8 @@ function prequest(url, options, transform) {
             }
             if (err) {
                 d(`reject(${err})`);
-                return reject(err);
+                var message = body.message? body.message : body;
+                return reject(new ErrorWrapper(err, res.statusCode, message));
             }
             d(`request(${url}. Output: ${JSON.stringify(body)}`);
             if (transform === undefined) {
@@ -30,6 +31,11 @@ function prequest(url, options, transform) {
     });
 }
 
+function ErrorWrapper(err, status, message) {
+    this.err = err;
+    this.status = status;
+    this.message = message;
+}
 
 /*
  * Node-RED API abstraction for the secured Node-RED on AGILE.
@@ -151,7 +157,17 @@ var NodeRedApi = (baseurl, token) => {
                     "json": flowtopush,
                 })
             );
-        }
+        },
+
+        deleteflow: (tab_id) => {
+            var url = `${baseurl}/flow/${tab_id}`;
+            return prequest(
+                url,
+                get_options({
+                    "method": "DELETE"
+                })
+            );
+        },
     }
 }
 
@@ -382,68 +398,89 @@ var FlowPusher = (sourceapi, sourcelabel, targetapi) => {
 
     return {
         pushflow: () => {
+            return new Promise((resolve, reject) => {
 
-            /*
-             * Implementation note: nodes must be cloned when is intended to be
-             *  modified. Nodes are not being cloned by default.
-             */
-            var currentnodes;
-            var tabflownodes;
-            var tabnode;
-            var confignodes;
-            var localconfignodes;
-            var modifiedflows;
+                /*
+                 * Implementation note: nodes must be cloned when is intended to be
+                 *  modified. Nodes are not being cloned by default.
+                 */
+                var sourceflownodes;
+                var tabnode;
+                var sourceconfignodes;
+                var confignodestopush;
+                var flowtopush;
 
-            d('Step 0')
-            sourceapi.fetchcurrentflows()
-            .then(currentflows => {
-                d('Step 1')
-                currentnodes = currentflows;
-                tabnode = utils.findtabnode(currentflows, sourcelabel);
+                /*
+                 * Get all source flows to find the source flow we want to push
+                 */
+                sourceapi.fetchcurrentflows()
+                .then(sourceflows => {
+                    tabnode = utils.findtabnode(sourceflows, sourcelabel);
 
-                return sourceapi.fetchflow(tabnode["id"]);
-            }).then(sourceflow => {
-                d('Step 2')
-                tabflownodes = utils.findnodesintab(sourceflow);
+                    return sourceapi.fetchflow(tabnode["id"]);
+                }).then(sourceflow => {
+                    /*
+                     * sourceflow is the flow to push
+                     */
+                    sourceflownodes = utils.findnodesintab(sourceflow);
 
-                return sourceapi.fetchglobalflow();
-            }).then(localglobalflow => {
-                d('Step 3')
-                localconfignodes = utils.findconfignodes(localglobalflow);
+                    return sourceapi.fetchglobalflow();
+                }).then(sourceglobalflow => {
+                    /*
+                     * sourceconfignodes are needed to push the config nodes
+                     * to remote instance.
+                     */
+                    sourceconfignodes = utils.findconfignodes(sourceglobalflow);
 
-                return targetapi.fetchcurrentflows();
-            }).then(remotenodes => {
-                d('Step 4')
+                    return targetapi.fetchcurrentflows();
+                }).then(remoteflows => {
 
-                confignodes = difference(localconfignodes, remotenodes || []);
-                var flowtopush = {
-                    "id": tabnode["id"],
-                    "label": sourcelabel,
-                    "nodes": tabflownodes,
-                    "configs": confignodes
-                }
-                d(`configs: ${JSON.stringify(confignodes)}`)
+                    /*
+                     * the difference is calculated to avoid repeating node ids.
+                     */
+                    confignodestopush = difference(sourceconfignodes, remoteflows || []);
+                    flowtopush = {
+                        "id": tabnode["id"],
+                        "label": sourcelabel,
+                        "nodes": sourceflownodes,
+                        "configs": confignodestopush
+                    }
+                    d(`configs: ${JSON.stringify(confignodestopush)}`)
 
-                modify_flowtopush(flowtopush.nodes);
-                //modifiedflows = modify_link_out_nodes(currentnodes, tabnode);
+                    modify_flowtopush(flowtopush.nodes);
+                    /* flowtopush now contains the flow to push */
 
-                return targetapi.postflow(flowtopush);
-            }).then(body => {
-                d('Step 5')
+                    /*
+                     * Now let's remove the flow if already exists on remote
+                     */
+                    var remotetabnode = utils.findtabnode(remoteflows, sourcelabel);
+                    if (remotetabnode) {
+                        return targetapi.deleteflow(remotetabnode["id"]);
+                    } else {
+                        return undefined;
+                    }
 
-                //return sourceapi.postflows(modifiedflows, "nodes");
-            }).then(body => {
+                }).then( () => {
+                    /*
+                     * Ready to push the flow!
+                     */
+                    return targetapi.postflow(flowtopush);
+                }).then(body => {
 
-                /*  Does nothing */
+                    /*  Does nothing */
+                    return resolve(true);
 
-            }).catch(err => {
-                console.log(err.stack || err);
+                }).catch(err => {
+
+                    return reject(err);
+                });
             });
         }
     };
 };
 
 module.exports = {
+    ErrorWrapper: ErrorWrapper,
     FlowPusher : FlowPusher,
     FlowUtils: FlowUtils,
     NodeRedApi: NodeRedApi
