@@ -17,8 +17,14 @@ function prequest(url, options, transform) {
             }
             if (err) {
                 d(`reject(${err})`);
-                var message = body.message? body.message : body;
-                return reject(new ErrorWrapper(err, res.statusCode, message));
+                var e, message;
+                if (body) {
+                    message = body.message? body.message : body;
+                    e = new ErrorWrapper(err, res.statusCode, message);
+                } else {
+                    e = err;
+                }
+                return reject(e);
             }
             d(`request(${url}. Output: ${JSON.stringify(body)}`);
             if (transform === undefined) {
