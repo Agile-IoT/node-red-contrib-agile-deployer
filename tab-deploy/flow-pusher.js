@@ -238,7 +238,7 @@ var FlowUtils = () => {
 
         var confignodes = findnodes(
             configtab.configs || [],
-            n => n.type != Types.UI_BASE && n.type != "xively-config"
+            n => !n.type.startsWith("ui_") && n.type != "xively-config"
         );
         return confignodes;
     }
