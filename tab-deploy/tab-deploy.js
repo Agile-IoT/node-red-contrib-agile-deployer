@@ -21,7 +21,7 @@ module.exports = function(RED) {
         d(`tab-deploy: config={ ${config.tab} ${config.remote} ${config.name} }`);
         node.on('input', function(msg) {
 
-            var sourceurl = msg.sourceurl || "http://localhost:1880/red";
+            var sourceurl = msg.payload.sourceurl || "http://localhost:1880/red";
             var user = msg.payload.user || undefined;
             var pwd = msg.payload.password || undefined;
 
