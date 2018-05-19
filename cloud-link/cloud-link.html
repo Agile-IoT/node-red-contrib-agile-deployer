@@ -1,0 +1,136 @@
+<!--
+*******************************************************************************
+* Copyright (c) 2018 Atos, and others
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License 2.0
+* which accompanies this distribution, and is available at
+* https://www.eclipse.org/legal/epl-2.0/
+*
+* Contributors:
+* Atos - initial implementation
+*******************************************************************************
+-->
+<script type="text/javascript">
+    function validate_percentage(v) {
+        return RED.validators.number()(v) && (v >= 0) && (v <=100);
+    }
+    RED.nodes.registerType('cloud-link',{
+        category: 'agile',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value:""},
+            cpu: {value:80, validate: validate_percentage },
+            mem: {value:80, validate: validate_percentage },
+            temperature: {value:80, required: true, validate:RED.validators.number() },
+            //remote: {value:"", type:"cloud-link-remote"},
+            remote: { value:"", required: true }
+        },
+        inputs:1,
+        outputs:2,
+        icon: "white-globe.png",
+        label: function() {
+            return this.name||"CloudLink";
+        },
+        oneditprepare: function() {
+            var node = this;
+            $( "#node-input-cpu" ).spinner({min:0, max:100});
+            $( "#node-input-mem" ).spinner({min:0, max:100});
+            $( "#node-input-temperature" ).spinner({min:0, max:100});
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="cloud-link">
+    <div class="form-row">
+        <label for="node-input-cpu"><i class="icon-tag"></i> CPU Usage (%) &gt; </label>
+        <input type="text" id="node-input-cpu" style="text-align:end; width:50px; !important">
+    </div>
+    <div class="form-row">
+        <label for="node-input-mem"><i class="icon-tag"></i> Memory Usage (%) &gt; </label>
+        <input type="text" id="node-input-mem" style="text-align:end; width:50px; !important">
+    </div>
+    <div class="form-row">
+        <label for="node-input-temperature"><i class="icon-tag"></i> Temperature (&#176;C) &gt; </label>
+        <input type="text" id="node-input-temperature" style="text-align:end; width:50px; !important">
+    </div>
+    <div class="form-row">
+        <label for="node-input-remote"><i class="icon-tag"></i> Remote endpoint </label>
+        <input type="text" id="node-input-remote">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="cloud-link">
+    <p>This node switches execution flow
+    depending on the device status
+    (temperature, CPU usage, memory usage). If the thresholds are satisfied,
+    the execution continues locally through the first input. If not, an HTTP
+    request is made to a remote URL, using msg.payload as body; the response
+    is then sent to the second input.
+    </p>
+
+    <p>The objetive is allowing adaptive jobs offloading.
+    </p>
+
+    <p>This node is intended to be used in conjunction with the TabDeploy node,
+    which uploads a workflow 'W' to a remote NODE-Red instance. The workflow 'W'
+    receives input by a linkin node 'LI', and gives output by a linkout node 'LO'.
+    The first input of the CloudLink node must feed a linkout node pointing
+    to 'LI'.
+    The second input must feed a linkout node pointing to the linkin node pointed
+    by 'LO'.
+
+    The remote URL must be the endpoint of the http_in node on the remote 'W',
+    which is the URL of the remote NODE-Red instance / 'LI' ID.
+    </p>
+
+
+    <h3>Parameters</h3>
+    <dl>
+        <dt>CPU Usage</dt>
+        <dd>Maximum CPU usage allowed to process the execution locally</dd>
+        <dt>Mem Usage</dt>
+        <dd>Maximum mem usage allowed to process the execution locally</dd>
+        <dt>Temperature</dt>
+        <dd>Maximum temperature allowed to process the execution locally</dd>
+    </dl>
+    <h3>Inputs</h3>
+    <p>The <code>msg.payload</code> MUST be a JSON object. When processing remotely,
+    the <code>msg.payload</code> is sent in the request body</p>
+    <dl class="message-properties">
+        <dt>payload</dt>
+        <dd>Any JSON object.</dd>
+        <dt>cpu</dt>
+        <dd>Current CPU usage</dd>
+        <dt>mem</dt>
+        <dd>Current Mem usage</dd>
+        <dt>temp</dt>
+        <dd>Current temperature</dd>
+    </dl>
+
+    <h3>Output</h3>
+    <p>The first output is used when the flow is considered to be processed locally.
+    No changes to <code>msg</code> are done.
+    </p>
+    <p>The second output is used when the flow is considered to be considered
+    to be processed remotely. The <code>msg.payload</code> contain the body of
+    the response to the remote URL. Any other property will be lost.
+
+<!--
+    <h3>Config node</h3>
+    <dl>
+        <dt>HTTP binding endpoint</dt>
+        <dd>HTTP binding of IoT Agent</dd>
+
+        <dt>FIWARE Service, FIWARE ServicePath</dt>
+        <dd>A device is in the scope composed of these attributes. Contact the service creator if you do not know them</dd>
+
+        <dt>API Key</dt>
+        <dd>An apikey is needed to send data to the HTTP binding. If not specified, msg.apikey must contain the apikey</dd>
+    </dl>
+-->
+
+</script>

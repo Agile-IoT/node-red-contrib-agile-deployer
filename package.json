@@ -11,6 +11,7 @@
   ],
   "node-red": {
     "nodes": {
+      "cloud-link": "cloud-link/cloud-link.js",
       "tab-deploy": "tab-deploy/tab-deploy.js"
     }
   },
