@@ -76,15 +76,15 @@
     </p>
 
     <p>This node is intended to be used in conjunction with the TabDeploy node,
-    which uploads a workflow 'W' to a remote NODE-Red instance. The workflow 'W'
+    which uploads a workflow 'W' to a remote Node-RED instance. The workflow 'W'
     receives input by a linkin node 'LI', and gives output by a linkout node 'LO'.
-    The first input of the CloudLink node must feed a linkout node pointing
+    The first output of the CloudLink node must feed a linkout node pointing
     to 'LI'.
-    The second input must feed a linkout node pointing to the linkin node pointed
+    The second output must feed a linkout node pointing to the linkin node pointed
     by 'LO'.
 
     The remote URL must be the endpoint of the http_in node on the remote 'W',
-    which is the URL of the remote NODE-Red instance / 'LI' ID.
+    which is the URL of the remote Node-RED instance / 'LI' ID.
     </p>
 
 
@@ -99,7 +99,10 @@
     </dl>
     <h3>Inputs</h3>
     <p>The <code>msg.payload</code> MUST be a JSON object. When processing remotely,
-    the <code>msg.payload</code> is sent in the request body</p>
+    the <code>msg.payload</code> is sent in the request body.
+    <code>msg.payload.remote</code> is set to <code>true</code> so the code
+    in workflow 'W' is able to know where it is being executed.
+    </p>
     <dl class="message-properties">
         <dt>payload</dt>
         <dd>Any JSON object.</dd>
