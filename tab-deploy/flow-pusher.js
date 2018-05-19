@@ -269,6 +269,10 @@ var FlowUtils = () => {
         node.method = "post";
     }
 
+    function convert_to_http_out(node) {
+        node.type = Types.HTTP_OUT;
+    }
+
     function convert_to_http_request(node, remoteurl) {
         node.type = Types.HTTP_REQUEST;
         node.url = remoteurl;
@@ -305,6 +309,7 @@ var FlowUtils = () => {
         findconfignodes : findconfignodes,
         findlinkinnode : findlinkinnode,
         convert_to_http_in : convert_to_http_in,
+        convert_to_http_out : convert_to_http_out,
         convert_to_http_request : convert_to_http_request,
         linknodes : linknodes,
         newnode : newnode,
@@ -342,15 +347,15 @@ var FlowPusher = (sourceapi, sourcelabel, targetapi) => {
         var linkin_nodes = utils.findnodes(
             flow, n => utils.istype(n, Types.LINK_IN));
 
-        var httpout_nodes = linkin_nodes.forEach(linkin_node => {
+        var linkout_nodes = utils.findnodes(
+            flow, n => utils.istype(n, Types.LINK_OUT))
+
+        linkin_nodes.forEach(linkin_node => {
             utils.convert_to_http_in(linkin_node, build_path(linkin_node));
-            const httpin_node = linkin_node;
-            var httpout_node = utils.newnode(
-                utils.Types.HTTP_OUT,
-                { x : httpin_node.x, y : httpin_node.y + 30, z : httpin_node.z }
-            );
-            utils.linknodes(httpin_node, httpout_node)
-            flow.push(httpout_node);
+        });
+
+        linkout_nodes.forEach(linkout_node => {
+            utils.convert_to_http_out(linkout_node);
         });
     }
 
