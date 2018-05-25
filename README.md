@@ -16,12 +16,18 @@ workflow tab have the following requirements:
 * It has a single link-in node as input to the tab.
 * It has zero or one link-out node as output of the tab.
 
-The local workflow is unmodified while the remote workflow is slighly modified:
+The exported workflow is modified compared to the workflow to exportº:
 
 * The link-in node is replaced by a http_in node, with the link-in node ID as
   path
 * The link-out node is replaced by a http_out node, allowing the result of the
   workflow to be returned to the caller.
+
+The local workflow is modified if there is any cloud-link node connected to a
+link-out node connected to the link-in node of the workflow to export, and its
+remote URL is empty (this is actually a mis-configured node). In such a case, the
+remote URL of the cloud-link node is set to the http-in node of the exported
+workflow.
 
 The previous workflow in the remote Node-RED is replaced if exists.
 

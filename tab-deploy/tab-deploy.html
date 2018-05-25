@@ -57,6 +57,13 @@
         nodes.
     </p>
     <p>
+        If there is any cloud-link node connected to a link-out node connected
+        to a link-in node in the workflow to export, and the remote URL of the
+        cloud-link node is empty, its remote URL is set
+        to the URL of the http in node of the exported workflow. In this case,
+        you should reload the node-red UI to retrieve the updated workflows.
+    </p>
+    <p>
         By default, the source instance is http://localhost:1880/red, which
         can be overriden using the message payload.
     </p>

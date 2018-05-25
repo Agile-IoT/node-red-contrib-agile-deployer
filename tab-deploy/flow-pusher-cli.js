@@ -89,5 +89,5 @@ sourceapi
     if (err instanceof p.ErrorWrapper) {
         console.log(`Error: status=${err.status}`);
     }
-    console.log("Error: " + err.message || err.stack || err);
+    console.log("Error: " + (err.message || "") + (err.stack || "") );
 });

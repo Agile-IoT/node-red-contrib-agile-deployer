@@ -201,7 +201,8 @@ var FlowUtils = () => {
         LINK_OUT : "link out",
         HTTP_IN : "http in",
         HTTP_OUT : "http response",
-        HTTP_REQUEST : "http request"
+        HTTP_REQUEST : "http request",
+        CLOUD_LINK : "cloud-link",
     };
 
     /*
@@ -400,6 +401,54 @@ var FlowPusher = (sourceapi, sourcelabel, targetapi) => {
     }
 
     /*
+     * Convert the cloud_link nodes to a tab so their URL point to the pushed
+     * flow, only if the URL property is empty. Returns the modified nodes as a
+     * copy of the original nodes.
+     *
+     * The function finds the cloud_link connected to a link_out node connected
+     * to a link_in node in the tab. The URL to set is the ID of the link_in
+     * node.
+     */
+    function modify_cloud_link_nodes(currentnodes, tabnode) {
+        var modifiednodes = clone(currentnodes);
+
+        var linkin_nodes = utils.findnodes(
+            modifiednodes,
+            n => utils.istype(n, Types.LINK_IN) && utils.isintab(n, tabnode)
+        );
+        d(`linkin_nodes = ${JSON.stringify(linkin_nodes)}`);
+
+        linkin_nodes.forEach(in_ => {
+            const remoteurl = `${targetapi.baseurl}${build_path(in_)}`;
+
+            var linkout_nodes = utils.findnodes(
+                modifiednodes,
+                out => utils.istype(out, Types.LINK_OUT) &&
+                       utils.islinkingto(out, in_));
+
+            d(`linkout_nodes = ${JSON.stringify(linkout_nodes)}`);
+
+            var cloudlink_nodes = utils.findnodes(
+                modifiednodes,
+                cl => utils.istype(cl, Types.CLOUD_LINK) &&
+                        linkout_nodes.filter(
+                            out => utils.islinkingto(cl, out) ));
+
+            d(`cloudlink_nodes = ${JSON.stringify(cloudlink_nodes)}`);
+            cloudlink_nodes.forEach( n => {
+                if (!n.remote) {
+                    n.remote = remoteurl
+                    d(`Updating cloud_link[id=${n.id}].url=${remoteurl}. cloud_link=${JSON.stringify(n)}`);
+                } else {
+                    d(`Skipping cloud_link[id=${n.id}].url not empty`);
+                }
+            });
+        });
+        d(`modifiednodes=${JSON.stringify(modifiednodes)}`)
+        return modifiednodes;
+    }
+
+    /*
      * Calculates nodeset1 - nodeset2
      * (i.e., each element in nodeset1 but not in nodeset2)
      */
@@ -425,6 +474,7 @@ var FlowPusher = (sourceapi, sourcelabel, targetapi) => {
                  * Implementation note: nodes must be cloned when is intended to be
                  *  modified. Nodes are not being cloned by default.
                  */
+                var sourceflows;
                 var sourceflownodes;
                 var tabnode;
                 var sourceconfignodes;
@@ -435,7 +485,8 @@ var FlowPusher = (sourceapi, sourcelabel, targetapi) => {
                  * Get all source flows to find the source flow we want to push
                  */
                 sourceapi.fetchcurrentflows()
-                .then(sourceflows => {
+                .then(currentflows => {
+                    sourceflows = currentflows;
                     tabnode = utils.findtabnode(sourceflows, sourcelabel);
 
                     return sourceapi.fetchflow(tabnode["id"]);
@@ -463,7 +514,7 @@ var FlowPusher = (sourceapi, sourcelabel, targetapi) => {
                     flowtopush = {
                         "id": tabnode["id"],
                         "label": sourcelabel,
-                        "nodes": sourceflownodes,
+                        "nodes": clone(sourceflownodes),
                         "configs": confignodestopush
                     }
                     d(`configs: ${JSON.stringify(confignodestopush)}`)
@@ -486,6 +537,12 @@ var FlowPusher = (sourceapi, sourcelabel, targetapi) => {
                      * Ready to push the flow!
                      */
                     return targetapi.postflow(flowtopush);
+                }).then(body => {
+
+                    var sourcemodifiednodes =
+                            modify_cloud_link_nodes(sourceflows, tabnode)
+                    return sourceapi.postflows(sourcemodifiednodes, "nodes")
+
                 }).then(body => {
 
                     /*  Does nothing */
