@@ -12,6 +12,7 @@ module.exports = function(RED) {
     //use this module to make requests
     var d = require('debug')('cloud-link')
     var request=require('request');
+    var exec = require('child_process').exec;
 
     function CloudLink(config) {
         RED.nodes.createNode(this,config);
@@ -22,50 +23,84 @@ module.exports = function(RED) {
         node.on('input', function(msg) {
             d("cloud-link.on input");
 
-            if (toBeSentRemote(config, msg)) {
-                url = config.remote;
-                msg.payload.remote = true;
-                var options = {
-                    method: "POST",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-type": "application/json"
-                    },
-                    json: msg.payload
-                };
-                d(`options=${JSON.stringify(options)}`);
-                request(url, options, (err, res, body) => {
-                    if (!err && (res.statusCode < 200 || res.statusCode >= 300)) {
-                        method = options["method"] || "GET";
-                        err = new Error(
-                            `${res.statusCode} ${method} ${url}: ${JSON.stringify(body)}`
-                        );
-                        err.res = res;
-                    }
-                    if (err) {
-                        node.status({fill:"red", shape:"ring", text:err.message});
-                        msg.payload = undefined;
-                    }
-                    else {
-                        node.status({fill:"green", shape:"dot", text:"Sent to remote"});
-                        setTimeout( () => {
-                            node.status({});
-                        }, 1000);
-                    }
+            getValues(config.dummy, msg).then( result => {
 
-                    msg.payload = body;
-                    msg.status = (res && res.statusCode) || undefined;
-                    node.send([null, msg]);
-                });
+                if (toBeSentRemote(config, result)) {
+                    url = config.remote;
+                    msg.payload.remote = true;
+                    var options = {
+                        method: "POST",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-type": "application/json"
+                        },
+                        json: msg.payload
+                    };
+                    d(`options=${JSON.stringify(options)}`);
+                    request(url, options, (err, res, body) => {
+                        if (!err && (res.statusCode < 200 || res.statusCode >= 300)) {
+                            method = options["method"] || "GET";
+                            err = new Error(
+                                `${res.statusCode} ${method} ${url}: ${JSON.stringify(body)}`
+                            );
+                            err.res = res;
+                        }
+                        if (err) {
+                            node.status({fill:"red", shape:"ring", text:err.message});
+                            msg.payload = undefined;
+                        }
+                        else {
+                            node.status({fill:"green", shape:"dot", text:"Sent to remote"});
+                            setTimeout( () => {
+                                node.status({});
+                            }, 1000);
+                        }
 
-            } else {
-                node.status({fill:"green", shape:"dot", text:"Sent to local"});
-                setTimeout( () => {
-                    node.status({});
-                }, 1000);
-                node.send([msg, null]);
-            }
+                        msg.payload = body;
+                        msg.status = (res && res.statusCode) || undefined;
+                        node.send([null, msg]);
+                    });
+
+                } else {
+                    node.status({fill:"green", shape:"dot", text:"Sent to local"});
+                    setTimeout( () => {
+                        node.status({});
+                    }, 1000);
+                    node.send([msg, null]);
+                }
+            }).catch(err=> {
+                d(`cloud-link.on: error=${err}`)
+                node.status({fill:"red", shape:"ring", text:`${err}`});
+            });
         });
+    }
+
+    /*
+     * Tries to get (cpu, temp, mem) values from device
+     * - dummy : if dummy, returns directly the msg parameter; if not,
+     *           tries to read values (only rpi for the moment!)
+     * - msg: values to return when dummy is true
+     */
+    function getValues(dummy, msg) {
+
+        if (dummy) {
+            return Promise.resolve(msg);
+        }
+        return getValuesRpi();
+    }
+
+    function getValuesRpi() {
+        var cl = "vcgencmd measure_temp";
+
+        return new Promise( (resolve, reject) => {
+            execp(cl).then(result => {
+                var str = result.stdout.replace("temp=", "").replace("'C", "");
+                d(`parsed temp=${str}`)
+                return resolve({ temp: parseFloat(str) });
+            }).catch( err => {
+                return reject(err)
+            });
+        })
     }
 
     function toBeSentRemote(config, msg) {
@@ -82,6 +117,26 @@ module.exports = function(RED) {
 
         d(`cur(T,C,M)=${curTemp},${curCpu},${curMem} max(T,C,M)=${maxTemp},${maxCpu},${maxMem}`);
         return curTemp > maxTemp || curCpu > maxCpu || curMem > maxMem;
+    }
+
+    function execp(cmd, opts) {
+        opts || (opts = {});
+        d(`executing ${cmd}`)
+        return new Promise((resolve, reject) => {
+            exec(cmd, opts, (err, stdout, stderr) => {
+                if (err) {
+                    d(`execp: error=${err}`)
+                    return reject(err);
+                }
+                else {
+                    d(`execp: stdout=${stdout}`)
+                    return resolve({
+                        stdout: stdout,
+                        stderr: stderr
+                    });
+                }
+            });
+        });
     }
 
     RED.nodes.registerType("cloud-link", CloudLink);

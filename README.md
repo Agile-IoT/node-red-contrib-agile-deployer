@@ -16,7 +16,7 @@ workflow tab have the following requirements:
 * It has a single link-in node as input to the tab.
 * It has zero or one link-out node as output of the tab.
 
-The exported workflow is modified compared to the workflow to exportº:
+The exported workflow is modified compared to the workflow to export:
 
 * The link-in node is replaced by a http_in node, with the link-in node ID as
   path
@@ -54,9 +54,9 @@ which is the URL of the remote Node-RED instance / 'LI' ID.
 
 **TODO**
 
-* The device status values are not obtained from the device yet.
-These can be set in the `msg` object for the moment.
-* Guess the remote URL to send the data to.
+* Currently, only getting the temperature from a Rpi device is supported
+(obtained executing a `vcgencmd measure_temp`). The rest of values
+are set to 0.
 
 ## Example ##
 

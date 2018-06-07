@@ -23,7 +23,8 @@
             mem: {value:80, validate: validate_percentage },
             temperature: {value:80, required: true, validate:RED.validators.number() },
             //remote: {value:"", type:"cloud-link-remote"},
-            remote: { value:"", required: true }
+            remote: { value:"", required: true },
+            dummy: { value: false }
         },
         inputs:1,
         outputs:2,
@@ -58,6 +59,10 @@
         <input type="text" id="node-input-remote">
     </div>
     <div class="form-row">
+        <label for="node-input-dummy"><i class="icon-tag"></i> Dummy mode</label>
+        <input type="checkbox" id="node-input-dummy">
+    </div>
+    <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
@@ -84,7 +89,16 @@
     by 'LO'.
 
     The remote URL must be the endpoint of the http_in node on the remote 'W',
-    which is the URL of the remote Node-RED instance / 'LI' ID.
+    which is the URL of the remote Node-RED instance / 'LI' ID. When using
+    the tab-deploy node to deploy the workflow to a remote instance, it is
+    able to set the value of the remote URL of the cloud-link node.
+    </p>
+
+    <p>
+        This node is WIP regarding getting the values from the device.
+        Currently, only getting the temperature from a Rpi device is supported
+        (obtained executing a `vcgencmd measure_temp`). The rest of values
+        are set to 0.
     </p>
 
 
@@ -96,6 +110,14 @@
         <dd>Maximum mem usage allowed to process the execution locally</dd>
         <dt>Temperature</dt>
         <dd>Maximum temperature allowed to process the execution locally</dd>
+        <dt>Remote endpoint</dt>
+        <dd>URL of remote Node-RED instance where to offload data processing</dd>
+        <dt>Dummy mode</dt>
+        <dd>
+          If checked, the device values are not get from the device, but
+          from the input message instead (see below). Any value not set will
+          be considered equals to zero.
+        </dd>
     </dl>
     <h3>Inputs</h3>
     <p>The <code>msg.payload</code> MUST be a JSON object. When processing remotely,
