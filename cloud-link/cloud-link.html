@@ -122,27 +122,39 @@
     <h3>Inputs</h3>
     <p>The <code>msg.payload</code> MUST be a JSON object. When processing remotely,
     the <code>msg.payload</code> is sent in the request body.
-    <code>msg.payload.remote</code> is set to <code>true</code> so the code
-    in workflow 'W' is able to know where it is being executed.
     </p>
     <dl class="message-properties">
         <dt>payload</dt>
         <dd>Any JSON object.</dd>
+        <dt>payload.thresholds</dt>
+        <dd>Overrides the thresholds set in the node. A json object with keys
+          "mem", "cpu" and "temp"
+        </dd>
         <dt>cpu</dt>
-        <dd>Current CPU usage</dd>
+        <dd>Current CPU usage (only used in dummy mode)</dd>
         <dt>mem</dt>
-        <dd>Current Mem usage</dd>
+        <dd>Current Mem usage (only used in dummy mode)</dd>
         <dt>temp</dt>
-        <dd>Current temperature</dd>
+        <dd>Current temperature (only used in dummy mode)</dd>
     </dl>
 
     <h3>Output</h3>
     <p>The first output is used when the flow is considered to be processed locally.
-    No changes to <code>msg</code> are done.
     </p>
     <p>The second output is used when the flow is considered to be considered
     to be processed remotely. The <code>msg.payload</code> contain the body of
-    the response to the remote URL. Any other property will be lost.
+    the response to the remote URL.
+    </p>
+    <p><code>msg.payload</code> is enriched with the following properties:
+    <ul>
+    <li><code>msg.payload.remote</code> is set to <code>true</code> so the code
+    in workflow 'W' is able to know where it is being executed.
+    <li><code>msg.payload.values</code> contain the current values of cpu, mem
+    and temp of the device
+    <li><code>msg.payload.thresholds</code> contain the thresholds used for the
+    comparison
+    </ul>
+    </p>
 
 <!--
     <h3>Config node</h3>
