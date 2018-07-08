@@ -94,7 +94,7 @@ module.exports = function(RED) {
             return Promise.resolve(
                 { "temp": msg.temp, "cpu": msg.cpu, "mem": msg.mem }
             );
-        } else if (os.arch() == "arm64") {
+        } else if (os.arch().startsWith("arm")) {
             d(`arm64 mode`)
             return perf.getValuesRpi();
         } else {

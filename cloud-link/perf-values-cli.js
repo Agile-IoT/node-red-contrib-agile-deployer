@@ -19,7 +19,7 @@ if (process.argv.length > 1) {
 }
 
 if (!f) {
-    if (os.arch() == "arm64") {
+    if (os.arch().startsWith("arm")) {
         f = p.getValuesRpi;
     } else {
         f = p.getValuesX64;
