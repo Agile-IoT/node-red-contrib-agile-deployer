@@ -27,6 +27,7 @@ module.exports = function(RED) {
                 if (msg.topic == "overall") {
                     result.cpu = msg.payload;
                 }
+                result.timestamp = new Date().getTime();
                 msg.payload = result;
                 node.send(msg);
             }).catch(err=> {
