@@ -19,8 +19,11 @@ function getValuesX64() {
     return Promise.all( [ memp() ]).then( results => {
         return {
             "mem": results[0],
-            "cpu": os.loadavg()[0] / os.cpus().length,
-            "temp": 0
+            "cpu": 0,
+            "load": os.loadavg()[0] / os.cpus().length,
+            "temp": 0,
+            "cpu_freq": 0,
+            "throttle": 0
         }
     });
 }
@@ -31,6 +34,21 @@ function getValuesRpi() {
             "mem": results[0],
             "cpu": os.loadavg()[0] / os.cpus().length,
             "temp": results[1]
+        }
+    });
+}
+
+function getFullValuesRpi() {
+    return Promise.all( [ memp(), tempp(), clockp(), throttledp() ]).then( results => {
+        return {
+            "mem": results[0],
+            "cpu": 0,
+            "load": os.loadavg()[0] / os.cpus().length,
+            "temp": results[1],
+            "cpu_freq": results[2],
+            "low_voltage": (results[3] & 1) != 0? 1 : 0,
+            "arm_freq_capped": (results[3] & 2) != 0? 1 : 0,
+            "turbo_disabled": (results[3] & 4) != 0? 1 : 0
         }
     });
 }
@@ -79,7 +97,34 @@ function tempp() {
             return resolve(0)
         });
     })
+}
 
+function clockp() {
+    const cl = "vcgencmd measure_clock arm";
+
+    return new Promise( (resolve, reject) => {
+        execp(cl).then(result => {
+            var str = result.stdout.replace("frequency(45)=", "");
+            d(`parsed freq=${str}`)
+            return resolve(parseFloat(str));
+        }).catch( err => {
+            return resolve(0)
+        });
+    })
+}
+
+function throttledp() {
+    const cl = "vcgencmd get_throttled";
+
+    return new Promise( (resolve, reject) => {
+        execp(cl).then(result => {
+            var str = result.stdout.replace("throttled=0x", "");
+            d(`parsed freq=${str}`)
+            return resolve(parseInt(str));
+        }).catch( err => {
+            return resolve(0)
+        });
+    })
 }
 
 function execp(cmd, opts) {
@@ -104,5 +149,6 @@ function execp(cmd, opts) {
 
 module.exports = {
     getValuesX64: getValuesX64,
-    getValuesRpi: getValuesRpi
+    getValuesRpi: getValuesRpi,
+    getFullValuesRpi: getFullValuesRpi
 }

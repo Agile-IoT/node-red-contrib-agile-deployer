@@ -1,0 +1,52 @@
+<!--
+*******************************************************************************
+* Copyright (c) 2018 Atos, and others
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License 2.0
+* which accompanies this distribution, and is available at
+* https://www.eclipse.org/legal/epl-2.0/
+*
+* Contributors:
+* Atos - initial implementation
+*******************************************************************************
+-->
+<script type="text/javascript">
+    RED.nodes.registerType('resources',{
+        category: 'agile',
+        color: '#a6bbcf',
+        defaults: {
+        },
+        inputs:1,
+        outputs:1,
+        icon: "light.png",
+        label: function() {
+            return this.name||"Resources";
+        },
+        oneditprepare: function() {
+            var node = this;
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="resources">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="resources">
+    <p>
+    </p>
+
+    <h3>Output</h3>
+    </p>
+    <p><code>msg.payload</code> is enriched with the following properties:
+    <ul>
+    <li>
+    <li>
+    <li>
+    </ul>
+    </p>
+
+</script>
