@@ -14,6 +14,9 @@
       "cloud-link": "cloud-link/cloud-link.js",
       "tab-deploy": "tab-deploy/tab-deploy.js",
       "resources": "resources/resources.js"
+      "cloud-link-switch": "cloud-link/cloud-link-switch.js",
+      "perf-measures": "cloud-link/perf-measures.js",
+      "tab-deploy": "tab-deploy/tab-deploy.js"
     }
   },
   "author": "Román Sosa",

@@ -1,0 +1,173 @@
+<!--
+*******************************************************************************
+* Copyright (c) 2018 Atos, and others
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License 2.0
+* which accompanies this distribution, and is available at
+* https://www.eclipse.org/legal/epl-2.0/
+*
+* Contributors:
+* Atos - initial implementation
+*******************************************************************************
+-->
+<script type="text/javascript">
+    function validate_percentage(v) {
+        return RED.validators.number()(v) && (v >= 0) && (v <=100);
+    }
+    RED.nodes.registerType('perf-measures',{
+        category: 'agile',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value:""},
+            cpu: {value:80, validate: validate_percentage },
+            mem: {value:80, validate: validate_percentage },
+            temperature: {value:80, required: true, validate:RED.validators.number() },
+            //remote: {value:"", type:"perf-measures-remote"},
+            remote: { value:"", required: true },
+            dummy: { value: false }
+        },
+        inputs:1,
+        outputs:2,
+        icon: "white-globe.png",
+        label: function() {
+            return this.name||"PerfMeasures";
+        },
+        oneditprepare: function() {
+            var node = this;
+            $( "#node-input-cpu" ).spinner({min:0, max:100});
+            $( "#node-input-mem" ).spinner({min:0, max:100});
+            $( "#node-input-temperature" ).spinner({min:0, max:100});
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="perf-measures">
+    <div class="form-row">
+        <label for="node-input-cpu"><i class="icon-tag"></i> CPU Usage (%) &gt; </label>
+        <input type="text" id="node-input-cpu" style="text-align:end; width:50px; !important">
+    </div>
+    <div class="form-row">
+        <label for="node-input-mem"><i class="icon-tag"></i> Memory Usage (%) &gt; </label>
+        <input type="text" id="node-input-mem" style="text-align:end; width:50px; !important">
+    </div>
+    <div class="form-row">
+        <label for="node-input-temperature"><i class="icon-tag"></i> Temperature (&#176;C) &gt; </label>
+        <input type="text" id="node-input-temperature" style="text-align:end; width:50px; !important">
+    </div>
+    <div class="form-row">
+        <label for="node-input-remote"><i class="icon-tag"></i> Remote endpoint </label>
+        <input type="text" id="node-input-remote">
+    </div>
+    <div class="form-row">
+        <label for="node-input-dummy"><i class="icon-tag"></i> Dummy mode</label>
+        <input type="checkbox" id="node-input-dummy">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="perf-measures">
+    <p>BUMM This node switches execution flow
+    depending on the device status
+    (temperature, CPU usage, memory usage). If the thresholds are satisfied,
+    the execution continues locally through the first input. If not, an HTTP
+    request is made to a remote URL, using msg.payload as body; the response
+    is then sent to the second input.
+    </p>
+
+    <p>The objetive is allowing adaptive jobs offloading.
+    </p>
+
+    <p>This node is intended to be used in conjunction with the TabDeploy node,
+    which uploads a workflow 'W' to a remote Node-RED instance. The workflow 'W'
+    receives input by a linkin node 'LI', and gives output by a linkout node 'LO'.
+    The first output of the PerfMeasures node must feed a linkout node pointing
+    to 'LI'.
+    The second output must feed a linkout node pointing to the linkin node pointed
+    by 'LO'.
+
+    The remote URL must be the endpoint of the http_in node on the remote 'W',
+    which is the URL of the remote Node-RED instance / 'LI' ID. When using
+    the tab-deploy node to deploy the workflow to a remote instance, it is
+    able to set the value of the remote URL of the perf-measures node.
+    </p>
+
+    <p>
+        This node is WIP regarding getting the values from the device.
+        Currently, only getting the temperature from a Rpi device is supported
+        (obtained executing a `vcgencmd measure_temp`). The rest of values
+        are set to 0.
+    </p>
+
+
+    <h3>Parameters</h3>
+    <dl>
+        <dt>CPU Usage</dt>
+        <dd>Maximum CPU usage allowed to process the execution locally</dd>
+        <dt>Mem Usage</dt>
+        <dd>Maximum mem usage allowed to process the execution locally</dd>
+        <dt>Temperature</dt>
+        <dd>Maximum temperature allowed to process the execution locally</dd>
+        <dt>Remote endpoint</dt>
+        <dd>URL of remote Node-RED instance where to offload data processing</dd>
+        <dt>Dummy mode</dt>
+        <dd>
+          If checked, the device values are not get from the device, but
+          from the input message instead (see below). Any value not set will
+          be considered equals to zero.
+        </dd>
+    </dl>
+    <h3>Inputs</h3>
+    <p>The <code>msg.payload</code> MUST be a JSON object. When processing remotely,
+    the <code>msg.payload</code> is sent in the request body.
+    </p>
+    <dl class="message-properties">
+        <dt>payload</dt>
+        <dd>Any JSON object.</dd>
+        <dt>payload.thresholds</dt>
+        <dd>Overrides the thresholds set in the node. A json object with keys
+          "mem", "cpu" and "temp"
+        </dd>
+        <dt>cpu</dt>
+        <dd>Current CPU usage (only used in dummy mode)</dd>
+        <dt>mem</dt>
+        <dd>Current Mem usage (only used in dummy mode)</dd>
+        <dt>temp</dt>
+        <dd>Current temperature (only used in dummy mode)</dd>
+    </dl>
+
+    <h3>Output</h3>
+    <p>The first output is used when the flow is considered to be processed locally.
+    </p>
+    <p>The second output is used when the flow is considered to be considered
+    to be processed remotely. The <code>msg.payload</code> contain the body of
+    the response to the remote URL.
+    </p>
+    <p><code>msg.payload</code> is enriched with the following properties:
+    <ul>
+    <li><code>msg.payload.remote</code> is set to <code>true</code> so the code
+    in workflow 'W' is able to know where it is being executed.
+    <li><code>msg.payload.values</code> contain the current values of cpu, mem
+    and temp of the device
+    <li><code>msg.payload.thresholds</code> contain the thresholds used for the
+    comparison
+    </ul>
+    </p>
+
+<!--
+    <h3>Config node</h3>
+    <dl>
+        <dt>HTTP binding endpoint</dt>
+        <dd>HTTP binding of IoT Agent</dd>
+
+        <dt>FIWARE Service, FIWARE ServicePath</dt>
+        <dd>A device is in the scope composed of these attributes. Contact the service creator if you do not know them</dd>
+
+        <dt>API Key</dt>
+        <dd>An apikey is needed to send data to the HTTP binding. If not specified, msg.apikey must contain the apikey</dd>
+    </dl>
+-->
+
+</script>
