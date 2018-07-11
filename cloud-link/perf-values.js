@@ -20,7 +20,7 @@ function getValuesX64() {
         return {
             "mem": results[0],
             "cpu": 0,
-            "load": os.loadavg()[0] / os.cpus().length,
+            "load": os.loadavg()[0],
             "temp": 0,
             "cpu_freq": 0,
             "throttle": 0
@@ -32,7 +32,8 @@ function getValuesRpi() {
     return Promise.all( [ memp(), tempp() ]).then( results => {
         return {
             "mem": results[0],
-            "cpu": os.loadavg()[0] / os.cpus().length,
+            "cpu": 0,
+            "load": os.loadavg()[0],
             "temp": results[1]
         }
     });
@@ -43,7 +44,7 @@ function getFullValuesRpi() {
         return {
             "mem": results[0],
             "cpu": 0,
-            "load": os.loadavg()[0] / os.cpus().length,
+            "load": os.loadavg()[0],
             "temp": results[1],
             "cpu_freq": results[2],
             "low_voltage": (results[3] & 1) != 0? 1 : 0,
