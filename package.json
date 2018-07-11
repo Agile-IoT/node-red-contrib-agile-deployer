@@ -12,7 +12,8 @@
   "node-red": {
     "nodes": {
       "cloud-link": "cloud-link/cloud-link.js",
-      "tab-deploy": "tab-deploy/tab-deploy.js"
+      "tab-deploy": "tab-deploy/tab-deploy.js",
+      "resources": "resources/resources.js"
     }
   },
   "author": "Román Sosa",
