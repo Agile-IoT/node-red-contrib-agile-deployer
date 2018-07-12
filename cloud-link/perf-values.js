@@ -102,7 +102,6 @@ function tempp() {
 
 function tempi() {
     const cl = 'sensors | grep -oP \'Core 0.*?\\+\\K[0-9.]+\'';
-    //const cl = 'sensors | grep "Core 0"';
     return new Promise( (resolve, reject) => {
         execp(cl).then(result => {
             d(`parsed temp=${result.stdout}`)
