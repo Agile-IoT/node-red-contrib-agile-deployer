@@ -16,13 +16,13 @@ const exec = require('child_process').exec;
 const d = require('debug')('perf-values')
 
 function getValuesX64() {
-    return Promise.all( [ memp() ]).then( results => {
+    return Promise.all( [ memp(), tempi(), clocki() ]).then( results => {
         return {
             "mem": results[0],
             "cpu": 0,
             "load": os.loadavg()[0],
-            "temp": 0,
-            "cpu_freq": 0,
+            "temp": results[1],
+            "cpu_freq": results[2],
             "throttle": 0
         }
     });
@@ -100,6 +100,18 @@ function tempp() {
     })
 }
 
+function tempi() {
+    const cl = 'sensors | grep -oP \'Core 0.*?\\+\\K[0-9.]+\'';
+    return new Promise( (resolve, reject) => {
+        execp(cl).then(result => {
+            d(`parsed temp=${result.stdout}`)
+            return resolve(parseFloat(result.stdout));
+        }).catch( err => {
+            return resolve(0)
+        });
+    })
+}
+
 function clockp() {
     const cl = "vcgencmd measure_clock arm";
 
@@ -108,6 +120,17 @@ function clockp() {
             var str = result.stdout.replace("frequency(45)=", "");
             d(`parsed freq=${str}`)
             return resolve(parseFloat(str));
+        }).catch( err => {
+            return resolve(0)
+        });
+    })
+}
+
+function clocki() {
+    const cl = "cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq";
+    return new Promise( (resolve, reject) => {
+        execp(cl).then(result => {
+            return resolve(parseFloat(result.stdout));
         }).catch( err => {
             return resolve(0)
         });
