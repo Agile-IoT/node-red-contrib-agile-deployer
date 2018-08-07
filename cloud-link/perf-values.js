@@ -16,10 +16,10 @@ const exec = require('child_process').exec;
 const d = require('debug')('perf-values')
 
 function getValuesX64() {
-    return Promise.all( [ memp(), tempi(), clocki() ]).then( results => {
+    return Promise.all( [ memp(), tempi(), clocki(), cpup() ]).then( results => {
         return {
             "mem": results[0],
-            "cpu": 0,
+            "cpu": results[3],
             "load": os.loadavg()[0],
             "temp": results[1],
             "cpu_freq": results[2],
@@ -29,10 +29,10 @@ function getValuesX64() {
 }
 
 function getValuesRpi() {
-    return Promise.all( [ memp(), tempp() ]).then( results => {
+    return Promise.all( [ memp(), tempp(), cpup() ]).then( results => {
         return {
             "mem": results[0],
-            "cpu": 0,
+            "cpu": results[2],
             "load": os.loadavg()[0],
             "temp": results[1]
         }
@@ -40,10 +40,10 @@ function getValuesRpi() {
 }
 
 function getFullValuesRpi() {
-    return Promise.all( [ memp(), tempp(), clockp(), throttledp() ]).then( results => {
+    return Promise.all( [ memp(), tempp(), clockp(), throttledp(), cpup() ]).then( results => {
         return {
             "mem": results[0],
-            "cpu": 0,
+            "cpu": results[4],
             "load": os.loadavg()[0],
             "temp": results[1],
             "cpu_freq": results[2],
@@ -145,6 +145,34 @@ function throttledp() {
             var str = result.stdout.replace("throttled=0x", "");
             d(`parsed freq=${str}`)
             return resolve(parseInt(str));
+        }).catch( err => {
+            return resolve(0)
+        });
+    })
+}
+
+const reIdle = /.* /
+
+/*
+ * This function relies on a `sar 1 > /var/tmp/sar` running on background
+ */
+function cpup() {
+    /*
+     * Both methods offer similar performance
+     */
+    const method = 1;
+    const cl = (method == 1)?
+            "tail -1 /var/tmp/sar | sed -e's/.* //'" :
+            "tail -1 /var/tmp/sar"
+    return new Promise( (resolve, reject) => {
+        execp(cl).then(result => {
+            if (result.stdout == "") {
+                throw 0;
+            }
+            var str = (method == 1)?
+                    result.stdout : result.stdout.replace(reIdle, "");
+            var idle = parseFloat(str);
+            return resolve(100.0 - idle);
         }).catch( err => {
             return resolve(0)
         });

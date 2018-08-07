@@ -28,10 +28,13 @@ if (!f) {
 
 console.log("Using function " + f);
 
-
+var begin = new Date();
 f()
 .then(values => {
+    var end = new Date();
+    var delta = end - begin;
     console.log(`values = ${JSON.stringify(values)}`);
+    console.log(`processing time = ${delta} ms`)
 }).catch(err => {
     console.log("Error: " + (err.message || "") + (err.stack || "") );
 });
