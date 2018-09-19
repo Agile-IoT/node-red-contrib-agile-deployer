@@ -66,14 +66,14 @@ for (i = 1; i < process.argv.length; i++) {
     }
 }
 
+if (appname == "" || apikey == "") {
+    usage_and_exit();
+}
+
 console.log(`deployerurl = ${deployerurl}`);
 console.log(`zipurl = ${zipurl}`);
 console.log(`appname = ${appname}`);
 
-
-if (appname == "" || apikey == "") {
-    usage_and_exit();
-}
 
 var deployer = dc.Deployer(deployerurl, "heroku", apikey);
 

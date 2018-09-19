@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-agile-deployer",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Remote deployment and offloading nodes",
   "main": "index.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "nodes": {
       "cloud-link": "cloud-link/cloud-link.js",
       "tab-deploy": "tab-deploy/tab-deploy.js",
-      "resources": "resources/resources.js"
+      "heroku-deploy": "heroku-deploy/heroku-deploy.js"
     }
   },
   "author": "Román Sosa",

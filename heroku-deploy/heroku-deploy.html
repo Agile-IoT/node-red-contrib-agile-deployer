@@ -1,0 +1,94 @@
+<!--
+*******************************************************************************
+* Copyright (c) 2018 Atos, and others
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License 2.0
+* which accompanies this distribution, and is available at
+* https://www.eclipse.org/legal/epl-2.0/
+*
+* Contributors:
+* Atos - initial implementation
+*******************************************************************************
+-->
+<script type="text/javascript">
+    RED.nodes.registerType('heroku-deploy',{
+        category: 'agile',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value:""},
+            appname: {value: "", required: true},
+            apikey: {value:"", required: true},
+            archive: {value: "https://github.com/node-red/node-red/releases/download/0.18.4/node-red-0.18.4.zip", required: true},
+            deployerurl: {value: "http://deployer:8002", required: true}
+        },
+        inputs:1,
+        outputs:0,
+        icon: "white-globe.png",
+        label: function() {
+            return this.name||"HerokuDeploy";
+        },
+        oneditprepare: function() {
+            var node = this;
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="heroku-deploy">
+    <div class="form-row">
+        <label for="node-input-apikey"><i class="icon-tag"></i> API Key </label>
+        <input type="text" id="node-input-apikey">
+    </div>
+    <div class="form-row">
+        <label for="node-input-appname"><i class="icon-tag"></i> Application name </label>
+        <input type="text" id="node-input-appname">
+    </div>
+    <div class="form-row">
+        <label for="node-input-archive"><i class="icon-tag"></i> Node-RED archive URL </label>
+        <input type="text" id="node-input-archive">
+    </div>
+    <div class="form-row">
+        <label for="node-input-deployerurl"><i class="icon-tag"></i> AGILE PaaS Deployer URL </label>
+        <input type="text" id="node-input-deployerurl">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="heroku-deploy">
+    <p>This is a node to ...3</p>
+
+    <h3>Parameters</h3>
+    <dl>
+        <dt>CPU Usage</dt>
+        <dd>...</dd>
+    </dl>
+    <h3>Inputs</h3>
+    <p>The <code>msg.payload</code> is intended be a single sensor datum in AGILE schema.</p>
+    <dl class="message-properties">
+        <dt>deviceID</dt>
+        <dd>AGILE name of device</dd>
+
+        <dt>componentID</dt>
+        <dd>AGILE name of measure from device</dd>
+
+        <dt>value</dt>
+        <dd>Measure value</dd>
+    </dl>
+
+<!--
+    <h3>Config node</h3>
+    <dl>
+        <dt>HTTP binding endpoint</dt>
+        <dd>HTTP binding of IoT Agent</dd>
+
+        <dt>FIWARE Service, FIWARE ServicePath</dt>
+        <dd>A device is in the scope composed of these attributes. Contact the service creator if you do not know them</dd>
+
+        <dt>API Key</dt>
+        <dd>An apikey is needed to send data to the HTTP binding. If not specified, msg.apikey must contain the apikey</dd>
+    </dl>
+-->
+
+</script>
