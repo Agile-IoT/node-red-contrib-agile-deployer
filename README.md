@@ -7,6 +7,7 @@ Available nodes:
 
 * tab-deploy: uploads a workflow tab to a remote Node-RED
 * cloud-link: performs adaptive jobs offloading depending of device status (CPU, mem or temperature)
+* heroku-deploy: deploys a Node-RED instance on Heroku
 
 ## tab-deploy ##
 
@@ -50,13 +51,19 @@ by 'LO'.
 The remote URL must be the endpoint of the http_in node on the remote 'W',
 which is the URL of the remote Node-RED instance / 'LI' ID.
 
-*Note*: The `msg.payload` input to the cloud-link must be a JSON object.
+*Note 1*: The `msg.payload` input to the cloud-link must be a JSON object.
 
-**TODO**
+**Note 2**: The node depends on external programs to get CPU usage and
+  temperature information, which are already included in the AGILE
+  distribution. For RPi, `vcgencmd` and `sysstat` are needed; for x64,
+  `lm-sensors` and `sysstat`. Additionally, to get the CPU usage per
+  second, a background `sar 1 > /var/tmp/sar 2>/dev/null &` must be
+  running.
 
-* Currently, only getting the temperature from a Rpi device is supported
-(obtained executing a `vcgencmd measure_temp`). The rest of values
-are set to 0.
+## heroku-deploy ##
+
+The heroku-deploy node deploys a Node-RED runtime on Heroku.
+It requires the AGILE PaaS Deployer to work.
 
 ## Example ##
 

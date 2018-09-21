@@ -95,10 +95,15 @@
     </p>
 
     <p>
-        This node is WIP regarding getting the values from the device.
-        Currently, only getting the temperature from a Rpi device is supported
-        (obtained executing a `vcgencmd measure_temp`). The rest of values
-        are set to 0.
+    The node supports getting the information of temperature
+    and CPU usage on Raspberry PI and x64 architectures, but depends on
+    external programs:
+
+    <li>Raspberry PI: vcgencmd and sar (sysstat package)
+    <li>x64: sensors and sar(lm-sensors package)
+
+    To get CPU usage, a background <i>sar 1 &gt; /var/tmp/sar 2&gt;/dev/null &</i>
+    must be running.
     </p>
 
 
@@ -136,6 +141,7 @@
         <dd>Current Mem usage (only used in dummy mode)</dd>
         <dt>temp</dt>
         <dd>Current temperature (only used in dummy mode)</dd>
+        
     </dl>
 
     <h3>Output</h3>
