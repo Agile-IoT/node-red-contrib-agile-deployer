@@ -95,6 +95,15 @@ function tempp() {
             d(`parsed temp=${str}`)
             return resolve(parseFloat(str));
         }).catch( err => {
+            console.error(`Error executing ${cl}. Is it installed?.
+If running inside a container, make sure you have the following lines for nodered in your docker-compose file:
+
+environment:
+  - LD_LIBRARY_PATH=/opt/vc/lib
+devices:
+  - /dev/vchiq:/dev/vchiq
+`);
+
             return resolve(0)
         });
     })
@@ -107,6 +116,7 @@ function tempi() {
             d(`parsed temp=${result.stdout}`)
             return resolve(parseFloat(result.stdout));
         }).catch( err => {
+            console.error(`Error executing ${cl}. Is it installed?`);
             return resolve(0)
         });
     })
@@ -154,7 +164,7 @@ function throttledp() {
 const reIdle = /.* /
 
 /*
- * This function relies on a `sar 1 > /var/tmp/sar` running on background
+ * This function relies on a `sar 1 > /var/tmp/sar` running in background
  */
 function cpup() {
     /*
@@ -174,6 +184,7 @@ function cpup() {
             var idle = parseFloat(str);
             return resolve(100.0 - idle);
         }).catch( err => {
+            console.error(`Error executing ${cl}. This needs a \`sar 1 > /var/tmp/sar\` running in background`);
             return resolve(0)
         });
     })
