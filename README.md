@@ -9,6 +9,14 @@ Available nodes:
 * cloud-link: performs adaptive jobs offloading depending of device status (CPU, mem or temperature)
 * heroku-deploy: deploys a Node-RED instance on Heroku
 
+Requirements:
+
+* cloud-link: 
+  * Make sure you are running agile-nodered >= 0.4.4 or agile-nodered:feature-readtemp, which include the necessary for this node to work (see Note 2 on cloud-link section below)
+  * To be able to get the temperature on Rpi from inside the container, the agile-nodered section in the agile-stack Dockerfile must be modified as in https://github.com/Agile-IoT/agile-stack/commit/06cd037cf67211216e4f35da0f17fee6d85a1ba2#diff-4e5e90c6228fd48698d074241c2ba760R158
+* heroku-deploy:
+  * agile-paas-deployer must be running. Include the following in your agile-stack Dockerfile: https://github.com/Agile-IoT/agile-stack/commit/bdf106750e32e4135ed1b6b7f380d688a35f2201 
+
 ## tab-deploy ##
 
 The tab-deploy node uploads a workflow tab to a remote Node-RED instance. The
